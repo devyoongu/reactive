@@ -1,0 +1,23 @@
+#server:
+#  tomcat:
+#    max-connections: 1000 #서버의 연결 개수가 maxConnections 에 도달하면, 서버는 계속 요청을 수락하지만 처리는 하지 않는다
+#    accept-count: 1000 #연결 요청이 maxConnections 에 도달했을 때 들어오는 요청의 대기열(queue) 길이를 의미한다. 일반적으로 이 큐에 메시지가 쌓여있다는 것은 톰캣이 요청을 처리할 수 있는 유휴 쓰레드(idle thread)가 없다는 의미
+#    threads:
+#      max: 1 #톰캣 내의 쓰레드 최대 개수를 결정하는 설정이다. 이때, 쓰레드 수는 실제 Active User 수 이다.
+
+
+server:
+  port : 8083
+  tomcat:
+    max-connections: 1
+    accept-count: 1
+    max-threads: 1
+
+
+#server:
+#  tomcat:
+#    threads:
+#      max: 1
+#      min-spare: 1
+#    accept-count: 1
+#  port: 8083
