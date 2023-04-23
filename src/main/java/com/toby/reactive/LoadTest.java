@@ -15,7 +15,7 @@ public class LoadTest {
         ExecutorService es = Executors.newFixedThreadPool(100);     // 100개의 코어 스레드 생성
 
         RestTemplate rt = new RestTemplate();
-        String url = "http://localhost:8083/v3/rest6?idx={idx}";
+        String url = "http://localhost:8083/v4/rest6?idx={idx}";
 
 //        CyclicBarrier barrier = new CyclicBarrier(101); //정해진 숫자만큼 blocking 후 한번에 실행하기 위함
 
