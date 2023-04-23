@@ -15,11 +15,11 @@ public class LoadTest {
         ExecutorService es = Executors.newFixedThreadPool(100);     // 100개의 코어 스레드 생성
 
         RestTemplate rt = new RestTemplate();
-        String url = "http://localhost:8083/v2/rest6?idx={idx}";
+        String url = "http://localhost:8083/v3/rest6?idx={idx}";
 
-        CyclicBarrier barrier = new CyclicBarrier(101); //정해진 숫자만큼 blocking 후 한번에 실행하기 위함
+//        CyclicBarrier barrier = new CyclicBarrier(101); //정해진 숫자만큼 blocking 후 한번에 실행하기 위함
 
-        for (int i=0; i<100; i++) {
+        for (int i=0; i<10; i++) {
 
             /*
              1. Callable : 리턴값 O (exception을 던지게끔 선언되어 있다.)
@@ -30,10 +30,10 @@ public class LoadTest {
                 //람다-별도 쓰레드에서 다른 쓰레드의 로컬 변수 i를 접근하지못한다.
                 int idx = counter.addAndGet(1);
 
-                barrier.await(); //block 되고 await을 만난 숫자가 찼을 때 해제된다.
+//                barrier.await(); //block 되고 await을 만난 숫자가 찼을 때 해제된다.
                 //exception thorws 가 필요하지만 Callable 로 변환했기 때문에 따로 처리하지 않아도 된다.
 
-                log.info("Thread is {}", idx);
+//                log.info("Thread is {}", idx);
 
                 StopWatch sw = new StopWatch();
                 sw.start();
@@ -46,7 +46,7 @@ public class LoadTest {
             });
         }
 
-        barrier.await();
+//        barrier.await();
 
         StopWatch main = new StopWatch();
         main.start();

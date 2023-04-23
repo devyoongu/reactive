@@ -24,6 +24,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.annotation.PostConstruct;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @EnableAsync
 @Slf4j
@@ -33,16 +34,11 @@ public class ReactiveApplicationV2 {
 	@RestController
 	@RequestMapping(value = "/v2")
 	public static class MyControllerV2 {
-
         public static final String URL1 = "http://localhost:8081/service?req={req}";
-		public static final String URL2 = "http://localhost:8081/service?req={req}";
+		public static final String URL2 = "http://localhost:8081/service2?req={req}";
+
 		@Autowired Myservice myservice;
-
 		AsyncRestTemplate rt = new AsyncRestTemplate(new Netty4ClientHttpRequestFactory(new NioEventLoopGroup(1))); //non-blocking io 방식을 이용해서 외부 호출할 수 있는 라이브러리를 적용하는 방법 netty 등
-
-		/*
-		MyService : 내부 작업을 추가한 버전
-		 */
 
 		@GetMapping("/rest5")
 		public DeferredResult<String> rest5(int idx) {
@@ -51,22 +47,22 @@ public class ReactiveApplicationV2 {
 
 			ListenableFuture<ResponseEntity<String>> f1 = rt.getForEntity(URL1, String.class, "hello" + idx);
 			f1.addCallback(s -> {
-					ListenableFuture<ResponseEntity<String>> f2 = rt.getForEntity(URL2, String.class, s.getBody());
-					f2.addCallback(s2-> {
-						ListenableFuture<String> f3 = myservice.work(s2.getBody()); // 내부 비동기 작업을 추가
-						f3.addCallback(s3-> {
-								dr.setErrorResult(s3);
-							}, e -> {
-								dr.setErrorResult(e.getMessage());
-							}
-						);
-						dr.setResult(s2.getBody() + "/work");
-					}, e -> {
+						ListenableFuture<ResponseEntity<String>> f2 = rt.getForEntity(URL2, String.class, s.getBody());
+						f2.addCallback(s2-> {
+							ListenableFuture<String> f3 = myservice.work(s2.getBody()); // 내부 비동기 작업을 추가
+							f3.addCallback(s3-> {
+										dr.setErrorResult(s3);
+									}, e -> {
+										dr.setErrorResult(e.getMessage());
+									}
+							);
+							dr.setResult(s2.getBody() + "/work");
+						}, e -> {
+							dr.setErrorResult(e.getMessage());
+						});
+					}, e-> {
 						dr.setErrorResult(e.getMessage());
-					});
-				}, e-> {
-					dr.setErrorResult(e.getMessage());
-				}
+					}
 			);
 
 			return dr;
@@ -78,20 +74,19 @@ public class ReactiveApplicationV2 {
 
 			Completion
 					.from(rt.getForEntity(URL1, String.class, "hello" + idx))
-					.andApply(s -> rt.getForEntity(URL2, String.class, s.getBody()))
+					.andApply(s -> rt.getForEntity(URL2, String.class, s.getBody())) //앞의 결과값이  response entity이기 때문에 string 을 뽑아내기 위해 s.getBody() 를 사용
 					.andAccept(s -> dr.setResult(s.getBody())); //ListenableFuture의 결과값이 ResponseEntity<String> 타입이기 때문에
-
 
 			return dr;
 		}
 	}
 
 
-
-
 	public static class Completion {
-
 		Completion next;
+
+		public Completion() {
+		}
 
 		private Consumer<ResponseEntity<String>> consumer;
 
@@ -99,7 +94,10 @@ public class ReactiveApplicationV2 {
 			this.consumer = consumer;
 		}
 
-		public Completion() {
+		public Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> fn;
+
+		public Completion(Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> fn) { //바로 사용할게 아니기 때문에 저장을 해야한다?
+			this.fn = fn;
 		}
 
 		public static Completion from(ListenableFuture<ResponseEntity<String>> lf) {
@@ -119,6 +117,12 @@ public class ReactiveApplicationV2 {
 			this.next = completion;
 		}
 
+		public Completion andApply(Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> fn) {
+			Completion completion = new Completion(fn);
+			this.next = completion;
+			return completion;
+		}
+
 		void error(Throwable e) {
 		}
 
@@ -129,20 +133,16 @@ public class ReactiveApplicationV2 {
 
 		}
 
-		void run(ResponseEntity<String> value) { // 앞의 비동기 작업이 넘어왔으니 나한테 등록된 컨슈머가 있다고 하면 앞의 작업의 결과를 넘겨준다?
+		void run(ResponseEntity<String> value) {
 			if (consumer != null) {
 				consumer.accept(value);
+			} else if (fn != null) {
+				ListenableFuture<ResponseEntity<String>> lf = fn.apply(value); // 실행하고
+				lf.addCallback(s -> complete(s), e -> error(e)); // 다음 단계를 위한 콜백등록
 			}
-
-
 		}
 
-
 	}
-
-
-
-
 
 
 	//비동기 내부 작업을 추가한 케이스
@@ -154,7 +154,7 @@ public class ReactiveApplicationV2 {
 		}
 	}
 
-	/*//Thread  갯수 제한 (Async 시 쓰레드가 무한대로 생기는 것을 방지하기 위함)
+    /*//Thread  갯수 제한 (Async 시 쓰레드가 무한대로 생기는 것을 방지하기 위함)
 	@Bean
 	public ThreadPoolTaskExecutor myThreadPool() {
 		ThreadPoolTaskExecutor te = new ThreadPoolTaskExecutor(); // 기본은 큐가 무한대

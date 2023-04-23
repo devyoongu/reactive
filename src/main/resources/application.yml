@@ -8,10 +8,10 @@
 
 server:
   port : 8083
-  tomcat:
-    max-connections: 1
-    accept-count: 1
-    max-threads: 1
+#  tomcat:
+#    max-connections: 1
+#    accept-count: 1
+#    max-threads: 1
 
 
 #server:

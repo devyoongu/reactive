@@ -33,7 +33,7 @@ public class ReactiveApplication {
 
 
 		public static final String HTTP_LOCALHOST_8081_SERVICE_REQ_REQ1 = "http://localhost:8081/service?req={req}";
-		public static final String HTTP_LOCALHOST_8081_SERVICE_REQ_REQ2 = "http://localhost:8081/service?req={req}";
+		public static final String HTTP_LOCALHOST_8081_SERVICE_REQ_REQ2 = "http://localhost:8081/service2?req={req}";
 		@Autowired Myservice myservice;
 
 
@@ -127,6 +127,9 @@ public class ReactiveApplication {
 
 		/*
 		MyService : 내부 작업을 추가한 버전
+		단점
+		1. 콜백지옥
+		2. 에러처리가 중복됨
 		 */
 
 		@GetMapping("/rest5")

@@ -16,13 +16,15 @@ public class RemoteService {
         public String rest(String req) throws InterruptedException {
             log.info("remote req is = {}", req);
             Thread.sleep(2000);
+//            throw new RuntimeException();
             return req + "/service";
         }
 
         @GetMapping("/service2")
         public String rest2(String req) throws InterruptedException {
-            log.info("remote req is = {}", req);
+            log.info("remote2 req is = {}", req);
             Thread.sleep(2000);
+//            throw new RuntimeException();
             return req + "/service2";
         }
     }
