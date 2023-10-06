@@ -58,7 +58,8 @@ public class ReactiveApplicationV4 {
 	}
 
 	/*
-	S : 넘어온 파라미터, T : 리턴 결과값(Completion?)
+	Completion : 이전의 비동기 작업을 이어 받아서 내가 비동기 작업을 수행하고 다음 비동기 작업에 넘겨주는 역할
+	S : 넘어온 파라미터(받는쪽 타입), T : 리턴 결과값(Completion?), 내 자신이 수행한 결과를 받아올때, 내가 수행할 때
 	 */
 	public static class Completion<S, T> {
 		/*
@@ -71,7 +72,7 @@ public class ReactiveApplicationV4 {
 
 		/*
 			비동기 작업의 결과를 담는 용도
-			스태틱이기 때문에 클래스의 파라미터와는 관계 없고 메서드레벨에 정의해야 한다.
+			스태틱이기 때문에 클래스의 파라미터와는 상관없이 메서드레벨에 정의해야 한다.
 			T : 내가 수행하기 때문
 		 */
 		public static <S, T> Completion<S, T> from(ListenableFuture<T> lf) {
@@ -89,9 +90,11 @@ public class ReactiveApplicationV4 {
 		}
 
 		/*
-			T : andApply에 적용하는 Completion에서 생성하는 결과값
+			andApply : 내가 새로게 생성하는 completion 에 적용할거기 때문에
+			T : andApply에 적용하는 Completion에서 생성하는 결과값 (클래스 레벨 T)
 			V : 그다음 completion이 어떤 비동기 결과값을 가질지 모르기 때문에 메서드 레벨에 새로 등록
 		 */
+//		public ReactiveApplicationV3.Completion andApply(Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> fn) {
 		public <V> Completion<T, V> andApply(Function<T, ListenableFuture<V>> fn) { //리턴값에도 타입 파라미터를 정의해야한다.
 			Completion<T, V> completion = new ApplyCompletion<>(fn);
 			this.next = completion;
@@ -109,6 +112,8 @@ public class ReactiveApplicationV4 {
 
 		/*
 		v3: void -> Completion : 에러가 발생하지 않으면 패스하고 다음 Completion으로 넘어가기 위함
+		v4 :
+
 		 */
 
 		public Completion<T, T> andError(Consumer<Throwable> errorConsumer) {
