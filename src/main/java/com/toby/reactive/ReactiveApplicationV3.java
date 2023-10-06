@@ -28,6 +28,11 @@ import java.util.function.Function;
 @SpringBootApplication
 public class ReactiveApplicationV3 {
 
+	/**
+	 * ReactiveApplicationV2 의 run 메서드의 다형성 적용
+	 * v2 error 처리의 중복 해결
+	 */
+
 	@RestController
 	@RequestMapping(value = "/v3")
 	public static class MyControllerV3 {
@@ -51,10 +56,6 @@ public class ReactiveApplicationV3 {
 		}
 	}
 
-	/**
-	 * ReactiveApplicationV2 의 run 메서드의 다형성 적용
-	 * v2 error 처리의 중복 해결
-	 */
 
 	public static class ApplyCompletion extends Completion {
 		public Function<ResponseEntity<String>, ListenableFuture<ResponseEntity<String>>> fn;
